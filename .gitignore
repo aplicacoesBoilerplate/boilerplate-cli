@@ -1,0 +1,4 @@
+boilerplate
+dist/
+*.exe
+.idea/
