@@ -4,6 +4,19 @@ import "context"
 
 type unavailableService struct{}
 
+type defaultService struct {
+	unavailableService
+	auth *authService
+}
+
+func newDefaultService(auth *authService) Service {
+	return &defaultService{auth: auth}
+}
+
+func (s *defaultService) Auth(ctx context.Context, request AuthRequest) error {
+	return s.auth.Auth(ctx, request)
+}
+
 func unavailable(operation string) error {
 	return NewCLIError(ExitConfiguration, operation+" ainda nao esta configurado nesta versao", nil)
 }

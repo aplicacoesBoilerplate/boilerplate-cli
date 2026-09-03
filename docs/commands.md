@@ -39,7 +39,14 @@ boilerplate auth logout
 boilerplate auth status
 ```
 
-Os subcomandos não aceitam argumentos. A implementação de credenciais pertence à issue #3: reutiliza `gh auth token`, preserva configurações existentes e nunca persiste uma cópia adicional do token.
+Os subcomandos não aceitam argumentos. `login` reutiliza a conta ativa do GitHub CLI por `gh auth token --hostname github.com` e configura:
+
+- o servidor `github-boilerplate` em `~/.m2/settings.xml`;
+- o registry `@aplicacoesBoilerplate` e sua credencial em `~/.npmrc`.
+
+Os arquivos são atualizados atomicamente com permissão `0600` onde o sistema operacional oferece permissões POSIX. Antes de cada alteração, a versão anterior recebe o sufixo `.boilerplate-cli.bak`. Se uma etapa falhar, arquivos e backups já alterados são restaurados; configurações XML/INI desconhecidas permanecem intactas. Blocos gerenciados incompletos, duplicados ou fora de ordem retornam conflito (`6`) sem escrita.
+
+`status` exige sessão válida do `gh` e entradas Maven/npm completas, mas nunca imprime a credencial. `logout` remove somente as entradas gerenciadas pela CLI e mantém a sessão do `gh`. `login` e `logout` aceitam o `--dry-run` global e não criam diretórios nesse modo.
 
 ## `init`
 

@@ -16,6 +16,8 @@ type Dependencies struct {
 	Stdout   io.Writer
 	Stderr   io.Writer
 	Discover func(string) (Workspace, error)
+	Runner   ProcessRunner
+	HomeDir  func() (string, error)
 }
 
 type commandContext struct {
@@ -83,9 +85,6 @@ func Execute() {
 }
 
 func withDefaults(dependencies Dependencies) Dependencies {
-	if dependencies.Service == nil {
-		dependencies.Service = unavailableService{}
-	}
 	if dependencies.Stdout == nil {
 		dependencies.Stdout = os.Stdout
 	}
@@ -94,6 +93,17 @@ func withDefaults(dependencies Dependencies) Dependencies {
 	}
 	if dependencies.Discover == nil {
 		dependencies.Discover = DiscoverWorkspace
+	}
+	if dependencies.Runner == nil {
+		dependencies.Runner = execProcessRunner{}
+	}
+	if dependencies.HomeDir == nil {
+		dependencies.HomeDir = os.UserHomeDir
+	}
+	if dependencies.Service == nil {
+		dependencies.Service = newDefaultService(
+			newAuthService(dependencies.Runner, dependencies.HomeDir, dependencies.Stdout),
+		)
 	}
 	return dependencies
 }

@@ -37,7 +37,7 @@ func authDescription(action AuthAction) string {
 	case AuthLogout:
 		return "Remove somente configuracoes gerenciadas pela CLI"
 	default:
-		return "Valida ferramentas e acesso ao GitHub Packages"
+		return "Valida a sessao do GitHub CLI e as configuracoes de packages"
 	}
 }
 

@@ -29,7 +29,17 @@ boilerplate doctor
 boilerplate audit
 ```
 
-O fluxo de autenticação reutilizará a sessão do GitHub CLI. Não haverá OAuth Device Flow próprio nem armazenamento de uma cópia do token pelo `boilerplate-cli`.
+O fluxo de autenticação reutiliza a sessão do GitHub CLI. Não há OAuth Device Flow nem cofre de credenciais próprio; o token não aparece em argumentos ou logs e fica restrito às configurações exigidas pelos clientes Maven/npm e aos respectivos backups protegidos.
+
+```text
+boilerplate auth login [--dry-run]
+boilerplate auth status
+boilerplate auth logout [--dry-run]
+```
+
+`auth login` lê a conta ativa por `gh auth token --hostname github.com`, configura o servidor Maven `github-boilerplate` em `~/.m2/settings.xml` e o escopo `@aplicacoesBoilerplate` em `~/.npmrc`. XML, comentários, registries e servidores não gerenciados são preservados. Antes de uma escrita, o conteúdo anterior é salvo ao lado do arquivo com o sufixo `.boilerplate-cli.bak`; repetir o comando sobre o mesmo estado não reescreve arquivos nem backups.
+
+`auth logout` remove apenas o servidor Maven e o bloco npm marcados pela CLI; ele não encerra a sessão do GitHub CLI. Configurações ambíguas ou marcadores incompletos resultam em conflito sem truncar o arquivo.
 
 ## Desenvolvimento
 
@@ -37,7 +47,7 @@ Requisitos:
 
 - Go 1.26;
 - acesso aos repositórios públicos da organização;
-- GitHub CLI autenticado para os futuros fluxos que consultam ou consomem GitHub Packages.
+- GitHub CLI autenticado para configurar e consumir GitHub Packages.
 
 ```bash
 go test ./...
