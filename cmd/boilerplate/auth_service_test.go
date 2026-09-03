@@ -346,6 +346,17 @@ func TestAuthRequiresReadPackagesScopeBeforeReadingToken(t *testing.T) {
 	}
 }
 
+func TestAuthAcceptsWritePackagesAsReadCapability(t *testing.T) {
+	home := t.TempDir()
+	runner := authenticatedRunner()
+	runner.responses[scopeStatusCall] = "repo, write:packages\n"
+	service := newAuthService(runner, func() (string, error) { return home, nil }, &bytes.Buffer{})
+
+	if err := service.Auth(context.Background(), AuthRequest{Action: AuthLogin}); err != nil {
+		t.Fatalf("write:packages must provide read capability: %v", err)
+	}
+}
+
 func TestDefaultDependenciesWireAuthWithoutPassingTokenAsArgument(t *testing.T) {
 	home := t.TempDir()
 	runner := authenticatedRunner()

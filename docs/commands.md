@@ -46,7 +46,7 @@ Os subcomandos não aceitam argumentos. `login` reutiliza a conta ativa do GitHu
 
 Os arquivos são atualizados atomicamente com permissão `0600` onde o sistema operacional oferece permissões POSIX. Antes de cada alteração, a versão anterior recebe o sufixo `.boilerplate-cli.bak`. Se uma etapa falhar, arquivos e backups já alterados são restaurados; configurações XML/INI desconhecidas permanecem intactas. Blocos gerenciados incompletos, duplicados ou fora de ordem retornam conflito (`6`) sem escrita.
 
-`status` exige sessão válida do `gh`, o escopo `read:packages` e entradas Maven/npm completas, mas nunca imprime a credencial. O escopo é lido do JSON de `gh auth status` sem usar `--show-token`; quando estiver ausente, pode ser adicionado com `gh auth refresh --hostname github.com --scopes read:packages`. `logout` remove somente as entradas gerenciadas pela CLI e mantém a sessão do `gh`. `login` e `logout` aceitam o `--dry-run` global e não criam diretórios nesse modo.
+`status` exige sessão válida do `gh`, capacidade de leitura de packages (`read:packages` ou o escopo superior `write:packages`) e entradas Maven/npm completas, mas nunca imprime a credencial. O escopo é lido do JSON de `gh auth status` sem usar `--show-token`; quando estiver ausente, pode ser adicionado com `gh auth refresh --hostname github.com --scopes read:packages`. `logout` remove somente as entradas gerenciadas pela CLI e mantém a sessão do `gh`. `login` e `logout` aceitam o `--dry-run` global e não criam diretórios nesse modo.
 
 Elementos Maven autocontidos (`<settings/>` ou `<servers/>`) são recusados como conflito antes de qualquer escrita, pois inserir filhos sem expandi-los invalidaria o XML.
 

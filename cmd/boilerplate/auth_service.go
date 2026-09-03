@@ -190,7 +190,8 @@ func (s *authService) validatePackagesScope(ctx context.Context) error {
 		return NewCLIError(ExitAuthentication, "GitHub CLI nao esta autenticado em github.com", err)
 	}
 	for _, scope := range strings.Split(strings.TrimSpace(scopesOutput), ",") {
-		if strings.TrimSpace(scope) == "read:packages" {
+		normalized := strings.TrimSpace(scope)
+		if normalized == "read:packages" || normalized == "write:packages" {
 			return nil
 		}
 	}
