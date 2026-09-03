@@ -6,11 +6,13 @@ O repositório e os templates de origem permanecem públicos. Projetos gerados p
 
 ## Estado atual
 
-O projeto está no milestone [`v0.0.1`](https://github.com/aplicacoesBoilerplate/boilerplate-cli/milestone/1). O código atual é somente o scaffold inicial; os comandos ainda exibem mensagens `TODO` e não devem ser usados para modificar projetos reais.
+O projeto está no milestone [`v0.0.1`](https://github.com/aplicacoesBoilerplate/boilerplate-cli/milestone/1). A árvore de comandos, a validação e a descoberta de monorepos já possuem um contrato executável; os handlers de sistema ainda em desenvolvimento falham com código explícito em vez de simular sucesso.
 
 - A [issue #2](https://github.com/aplicacoesBoilerplate/boilerplate-cli/issues/2) define `auth`, `init`, `new`, `add`, `update`, `doctor` e `audit`, incluindo `--dry-run`, idempotência, códigos de saída estáveis e suporte a monorepos.
 - A [issue #3](https://github.com/aplicacoesBoilerplate/boilerplate-cli/issues/3) implementa autenticação por `gh auth token` e edição segura das configurações Maven/npm, sem registrar credenciais.
 - A [issue #1](https://github.com/aplicacoesBoilerplate/boilerplate-cli/issues/1) acompanha a entrega completa da primeira versão.
+
+O contrato detalhado, inclusive códigos de saída e garantias de `--dry-run`, está em [`docs/commands.md`](docs/commands.md).
 
 ## Fluxo planejado
 
