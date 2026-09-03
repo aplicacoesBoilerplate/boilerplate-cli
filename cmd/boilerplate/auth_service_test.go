@@ -10,7 +10,10 @@ import (
 	"testing"
 )
 
-const testToken = "test-secret-1234567890<&"
+const (
+	testToken       = "test-secret-1234567890<&"
+	scopeStatusCall = "gh auth status --hostname github.com --active --json hosts --jq .hosts[\"github.com\"][0].scopes"
+)
 
 type fakeProcessRunner struct {
 	responses map[string]string
@@ -299,6 +302,50 @@ func TestAuthIgnoresMavenElementsInsideComments(t *testing.T) {
 	}
 }
 
+func TestAuthRejectsSelfClosingMavenContainersWithoutMutation(t *testing.T) {
+	fixtures := []string{
+		"<settings/>\n",
+		"<settings><servers/></settings>\n",
+	}
+	for _, fixture := range fixtures {
+		home := t.TempDir()
+		settingsPath := filepath.Join(home, ".m2", "settings.xml")
+		mustWrite(t, settingsPath, fixture)
+		service := newAuthService(authenticatedRunner(), func() (string, error) { return home, nil }, &bytes.Buffer{})
+
+		err := service.Auth(context.Background(), AuthRequest{Action: AuthLogin})
+		if ExitCodeFor(err) != ExitConflict {
+			t.Fatalf("self-closing Maven error = %v, code = %d", err, ExitCodeFor(err))
+		}
+		if got := mustRead(t, settingsPath); got != fixture {
+			t.Fatalf("self-closing Maven settings were changed: %q", got)
+		}
+		if _, statErr := os.Stat(settingsPath + backupSuffix); !os.IsNotExist(statErr) {
+			t.Fatal("rejected Maven settings must not create a backup")
+		}
+	}
+}
+
+func TestAuthRequiresReadPackagesScopeBeforeReadingToken(t *testing.T) {
+	home := t.TempDir()
+	runner := authenticatedRunner()
+	runner.responses[scopeStatusCall] = "repo, read:org\n"
+	service := newAuthService(runner, func() (string, error) { return home, nil }, &bytes.Buffer{})
+
+	err := service.Auth(context.Background(), AuthRequest{Action: AuthLogin})
+	if ExitCodeFor(err) != ExitAuthentication {
+		t.Fatalf("missing scope error = %v, code = %d", err, ExitCodeFor(err))
+	}
+	if strings.Contains(strings.Join(runner.calls, "\n"), "gh auth token") {
+		t.Fatal("token must not be read before the required scope is validated")
+	}
+	for _, path := range []string{filepath.Join(home, ".m2", "settings.xml"), filepath.Join(home, ".npmrc")} {
+		if _, statErr := os.Stat(path); !os.IsNotExist(statErr) {
+			t.Fatalf("missing scope created configuration %s: %v", path, statErr)
+		}
+	}
+}
+
 func TestDefaultDependenciesWireAuthWithoutPassingTokenAsArgument(t *testing.T) {
 	home := t.TempDir()
 	runner := authenticatedRunner()
@@ -325,9 +372,9 @@ func TestDefaultDependenciesWireAuthWithoutPassingTokenAsArgument(t *testing.T) 
 func authenticatedRunner() *fakeProcessRunner {
 	return &fakeProcessRunner{
 		responses: map[string]string{
+			scopeStatusCall:                                 "repo, read:org, read:packages\n",
 			"gh auth token --hostname github.com":           testToken + "\n",
 			"gh api --hostname github.com user --jq .login": "dev&ops\n",
-			"gh auth status --hostname github.com":          "github.com\n",
 		},
 		errors: map[string]error{},
 	}

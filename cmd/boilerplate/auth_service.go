@@ -19,6 +19,7 @@ const (
 	npmManagedEnd   = "# boilerplate-cli:end"
 	npmScopeLine    = "@aplicacoesBoilerplate:registry=https://npm.pkg.github.com"
 	npmTokenPrefix  = "//npm.pkg.github.com/:_authToken="
+	ghScopesQuery   = `.hosts["github.com"][0].scopes`
 )
 
 type ProcessRunner interface {
@@ -62,6 +63,9 @@ func (s *authService) Auth(ctx context.Context, request AuthRequest) error {
 }
 
 func (s *authService) login(ctx context.Context, dryRun bool) error {
+	if err := s.validatePackagesScope(ctx); err != nil {
+		return err
+	}
 	tokenOutput, err := s.runner.Run(ctx, "gh", "auth", "token", "--hostname", "github.com")
 	if err != nil {
 		return NewCLIError(ExitAuthentication, "GitHub CLI nao esta autenticado em github.com", err)
@@ -157,8 +161,8 @@ func (s *authService) logout(dryRun bool) error {
 }
 
 func (s *authService) status(ctx context.Context) error {
-	if _, err := s.runner.Run(ctx, "gh", "auth", "status", "--hostname", "github.com"); err != nil {
-		return NewCLIError(ExitAuthentication, "GitHub CLI nao esta autenticado em github.com", err)
+	if err := s.validatePackagesScope(ctx); err != nil {
+		return err
 	}
 	home, err := s.resolveHome()
 	if err != nil {
@@ -177,6 +181,21 @@ func (s *authService) status(ctx context.Context) error {
 	}
 	_, _ = fmt.Fprintln(s.output, "GitHub CLI, Maven e npm configurados")
 	return nil
+}
+
+func (s *authService) validatePackagesScope(ctx context.Context) error {
+	scopesOutput, err := s.runner.Run(ctx, "gh", "auth", "status", "--hostname", "github.com",
+		"--active", "--json", "hosts", "--jq", ghScopesQuery)
+	if err != nil {
+		return NewCLIError(ExitAuthentication, "GitHub CLI nao esta autenticado em github.com", err)
+	}
+	for _, scope := range strings.Split(strings.TrimSpace(scopesOutput), ",") {
+		if strings.TrimSpace(scope) == "read:packages" {
+			return nil
+		}
+	}
+	return NewCLIError(ExitAuthentication,
+		"a credencial ativa do GitHub precisa do escopo read:packages", nil)
 }
 
 func (s *authService) resolveHome() (string, error) {
@@ -294,6 +313,13 @@ func upsertMavenServer(content []byte, username, token string) ([]byte, error) {
 	if err := validateSettingsXML(content); err != nil {
 		return nil, NewCLIError(ExitConfiguration, "settings.xml nao contem XML valido", err)
 	}
+	selfClosing, err := rootElementSelfClosing(content, "settings")
+	if err != nil {
+		return nil, NewCLIError(ExitConfiguration, "nao foi possivel interpretar o settings.xml", err)
+	}
+	if selfClosing {
+		return nil, NewCLIError(ExitConflict, "settings.xml usa o elemento settings autocontido", nil)
+	}
 	sections, err := directChildRanges(content, "settings", "servers")
 	if err != nil {
 		return nil, NewCLIError(ExitConfiguration, "nao foi possivel interpretar o settings.xml", err)
@@ -306,6 +332,13 @@ func upsertMavenServer(content []byte, username, token string) ([]byte, error) {
 	if len(sections) == 1 {
 		location := sections[0]
 		section := content[location.start:location.end]
+		selfClosing, err := rootElementSelfClosing(section, "servers")
+		if err != nil {
+			return nil, NewCLIError(ExitConfiguration, "nao foi possivel interpretar os servidores Maven", err)
+		}
+		if selfClosing {
+			return nil, NewCLIError(ExitConflict, "settings.xml usa o elemento servers autocontido", nil)
+		}
 		updated, err := upsertServerInSection(section, server, newline)
 		if err != nil {
 			return nil, NewCLIError(ExitConfiguration, "nao foi possivel interpretar os servidores Maven", err)
@@ -497,6 +530,27 @@ func rootClosingOffset(content []byte, root string) (int, error) {
 				return start, nil
 			}
 			depth--
+		}
+	}
+}
+
+func rootElementSelfClosing(content []byte, root string) (bool, error) {
+	decoder := xml.NewDecoder(bytes.NewReader(content))
+	for {
+		start := int(decoder.InputOffset())
+		token, err := decoder.RawToken()
+		if errors.Is(err, io.EOF) {
+			return false, errors.New("root element not found")
+		}
+		if err != nil {
+			return false, err
+		}
+		if element, ok := token.(xml.StartElement); ok {
+			if element.Name.Local != root {
+				return false, errors.New("unexpected root element")
+			}
+			opening := bytes.TrimSpace(content[start:int(decoder.InputOffset())])
+			return bytes.HasSuffix(opening, []byte("/>")), nil
 		}
 	}
 }

@@ -37,7 +37,7 @@ boilerplate auth status
 boilerplate auth logout [--dry-run]
 ```
 
-`auth login` lê a conta ativa por `gh auth token --hostname github.com`, configura o servidor Maven `github-boilerplate` em `~/.m2/settings.xml` e o escopo `@aplicacoesBoilerplate` em `~/.npmrc`. XML, comentários, registries e servidores não gerenciados são preservados. Antes de uma escrita, o conteúdo anterior é salvo ao lado do arquivo com o sufixo `.boilerplate-cli.bak`; repetir o comando sobre o mesmo estado não reescreve arquivos nem backups.
+`auth login` exige `read:packages`, lê a conta ativa por `gh auth token --hostname github.com`, configura o servidor Maven `github-boilerplate` em `~/.m2/settings.xml` e o escopo `@aplicacoesBoilerplate` em `~/.npmrc`. XML, comentários, registries e servidores não gerenciados são preservados. Antes de uma escrita, o conteúdo anterior é salvo ao lado do arquivo com o sufixo `.boilerplate-cli.bak`; repetir o comando sobre o mesmo estado não reescreve arquivos nem backups. Se o escopo estiver ausente, use `gh auth refresh --hostname github.com --scopes read:packages`.
 
 `auth logout` remove apenas o servidor Maven e o bloco npm marcados pela CLI; ele não encerra a sessão do GitHub CLI. Configurações ambíguas ou marcadores incompletos resultam em conflito sem truncar o arquivo.
 
