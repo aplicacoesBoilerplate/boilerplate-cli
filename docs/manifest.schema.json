@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.boilerplate.local/dx-package-manifest.schema.json",
+  "title": "DX Package Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "package", "language", "minimumCliVersion"],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0" },
+    "package": { "type": "string", "minLength": 1 },
+    "language": { "type": "string", "enum": ["java", "vue"] },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "minimumCliVersion": { "type": "string", "minLength": 1 },
+    "groupId": { "type": "string" },
+    "artifactId": { "type": "string" },
+    "docs": { "$ref": "#/$defs/docs" },
+    "ide": { "$ref": "#/$defs/ide" },
+    "presets": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/preset" }
+    }
+  },
+  "$defs": {
+    "docs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "remote": { "type": "string" },
+        "local": { "type": "string" },
+        "javadoc": { "type": "string" }
+      }
+    },
+    "ide": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vscode": { "$ref": "#/$defs/vscode" },
+        "jetbrains": { "$ref": "#/$defs/jetbrains" }
+      }
+    },
+    "vscode": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "snippets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/packagePath" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "jetbrains": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "webTypes": { "$ref": "#/$defs/packagePath" },
+        "liveTemplates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/packagePath" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "preset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "templates": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/packagePath" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "packagePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "anyOf": [
+          { "pattern": "^/" },
+          { "pattern": "^[A-Za-z]:" },
+          { "pattern": "(^|/)\\.\\.(/|$)" }
+        ]
+      }
+    }
+  }
+}

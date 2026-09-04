@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "package": "boilerplate-starter",
+  "language": "java",
+  "groupId": "br.com.empresa",
+  "artifactId": "boilerplate-starter",
+  "minimumCliVersion": "0.1.0",
+  "docs": {
+    "remote": "https://docs.empresa.local/java/boilerplate-starter",
+    "javadoc": "https://docs.empresa.local/javadoc/boilerplate-starter"
+  },
+  "ide": {
+    "vscode": {
+      "snippets": ["META-INF/boilerplate/vscode/java.code-snippets"]
+    },
+    "jetbrains": {
+      "liveTemplates": ["META-INF/boilerplate/jetbrains/live-templates.xml"]
+    }
+  },
+  "presets": {
+    "properties": {
+      "description": "Aplica configuracao base em application.properties",
+      "templates": ["META-INF/boilerplate/templates/application.properties"]
+    },
+    "yml": {
+      "description": "Aplica configuracao base em application.yml",
+      "templates": ["META-INF/boilerplate/templates/application.yml"]
+    }
+  }
+}
