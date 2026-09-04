@@ -1,0 +1,8 @@
+{
+  "name": "empresa",
+  "binary": "empresa",
+  "npmScope": "@empresa",
+  "mavenRepo": "github-empresa",
+  "githubOrg": "empresa",
+  "mavenGroupId": "br.com.empresa"
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "package": "@empresa/ui",
+  "language": "vue",
+  "aliases": ["ui", "vuetify"],
+  "minimumCliVersion": "0.1.0",
+  "docs": {
+    "remote": "https://docs.empresa.local/ui",
+    "local": "apps/docs"
+  },
+  "ide": {
+    "vscode": {
+      "snippets": [".boilerplate/vscode/ui.code-snippets"]
+    },
+    "jetbrains": {
+      "webTypes": "web-types.json",
+      "liveTemplates": [".boilerplate/jetbrains/ui.xml"]
+    }
+  },
+  "presets": {
+    "prime": {
+      "description": "Configura plugin PrimeVue e tema base",
+      "templates": [".boilerplate/templates/prime/plugin.ts"]
+    },
+    "theme-scss": {
+      "description": "Aplica identidade visual SCSS sem alterar comportamento dos componentes",
+      "templates": [".boilerplate/templates/theme/index.scss"]
+    },
+    "vuetify": {
+      "description": "Configura plugin Vuetify e tema base",
+      "templates": [".boilerplate/templates/vuetify/plugin.ts"]
+    }
+  }
+}

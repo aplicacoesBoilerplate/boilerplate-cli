@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "package": "@empresa/ui",
+  "language": "vue",
+  "minimumCliVersion": "0.1.0",
+  "presets": {
+    "bad": {
+      "templates": ["../fora-da-raiz.ts"]
+    }
+  }
+}
