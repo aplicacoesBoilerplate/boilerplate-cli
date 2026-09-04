@@ -17,7 +17,7 @@ var rootCmd = &cobra.Command{
 	Use:   "boilerplate",
 	Short: "CLI DX para packages Java (Maven) + Vue (npm) da org aplicacoesBoilerplate",
 	Long: `boilerplate facilita a DX de devs internos:
-- auth login/status (le gh auth token e escreve ~/.m2/settings.xml e ~/.npmrc)
+- auth login/status (lê gh auth token e escreve ~/.m2/settings.xml e ~/.npmrc)
 - init (bootstrap em projeto existente - detecta pom.xml/package.json)
 - new [java|vue] <nome> (scaffolding)
 - add [java|vue] <pkg>@<ver>
