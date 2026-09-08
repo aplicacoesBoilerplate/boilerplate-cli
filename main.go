@@ -1,7 +1,19 @@
 package main
 
-import "github.com/aplicacoesBoilerplate/boilerplate-cli/cmd/boilerplate"
+import (
+	"context"
+	"os"
+
+	"github.com/aplicacoesBoilerplate/boilerplate-cli/core/runtime"
+)
 
 func main() {
-	boilerplate.Execute()
+	exitCode := runtime.Execute(
+		context.Background(),
+		os.Args[1:],
+		os.Stdout,
+		os.Stderr,
+	)
+
+	os.Exit(exitCode)
 }
