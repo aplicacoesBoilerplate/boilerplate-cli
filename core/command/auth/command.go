@@ -11,7 +11,7 @@ import (
  */
 func NewCommand() *cobra.Command {
 	// 'Instância' do service.
-	loginService := services.NewLoginService()
+	lLoginService := services.NewLoginService()
 
 	// Adiciona apenas um comando 'auth'
 	authCmd := &cobra.Command{
@@ -21,9 +21,9 @@ func NewCommand() *cobra.Command {
 
 	// Adiciona os comandos do grupo auth.
 	authCmd.AddCommand(
-		newLoginCommand(loginService),
-		// newLogoutCommand(),
-		// newStatusCommand(),
+		newLoginCommand(lLoginService),
+		newLogoutCommand(lLoginService),
+		// newStatusCommand(lLoginService),
 	)
 
 	return authCmd
