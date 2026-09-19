@@ -1,17 +1,15 @@
-package auth
+package command
 
 import (
-	"github.com/aplicacoesBoilerplate/boilerplate-cli/internal/application/auth/services"
+	"github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/auth/application"
 	"github.com/spf13/cobra"
 )
-
 
 /**
  * NewCommand cria o grupo de comandos de autenticação.
  */
 func NewCommand() *cobra.Command {
-	// 'Instância' do service.
-	lLoginService := services.NewLoginService()
+	authService := application.NewAuthServices()
 
 	// Adiciona apenas um comando 'auth'
 	authCmd := &cobra.Command{
@@ -21,9 +19,9 @@ func NewCommand() *cobra.Command {
 
 	// Adiciona os comandos do grupo auth.
 	authCmd.AddCommand(
-		newLoginCommand(lLoginService),
-		newLogoutCommand(lLoginService),
-		// newStatusCommand(lLoginService),
+		newLoginCommand(authService),
+		newLogoutCommand(authService),
+		newStatusCommand(authService),
 	)
 
 	return authCmd

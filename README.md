@@ -29,6 +29,21 @@ boilerplate audit
 
 O fluxo de autenticação reutilizará a sessão do GitHub CLI. Não haverá OAuth Device Flow próprio nem armazenamento de uma cópia do token pelo `boilerplate-cli`.
 
+## Arquitetura
+
+A CLI é organizada em Vertical Slices por recurso. Cada slice concentra seus contratos, camada de aplicação, adapters de comando e, quando necessários, domínio e infraestrutura.
+
+```text
+internal/features/<recurso>/
+  application/    # Orquestra os casos de uso.
+  command/        # Adapter Cobra: flags, argumentos e saída.
+  contracts/      # Contratos exclusivos do recurso.
+  domain/         # Regras de domínio, quando existirem.
+  infrastructure/ # Integrações externas, quando existirem.
+```
+
+`core` contém somente o runtime, o comando raiz e o registro da árvore Cobra. Contratos realmente compartilhados entre recursos ficam em `internal/shared`.
+
 ## Desenvolvimento
 
 Requisitos:

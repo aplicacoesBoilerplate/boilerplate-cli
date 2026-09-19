@@ -1,12 +1,12 @@
 package registry
 
 import (
-	"github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/auth"
-	// "github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/dependency"
-	// "github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/diagnostics"
-	// "github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/manifest"
-	// "github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/packages"
-	// "github.com/aplicacoesBoilerplate/boilerplate-cli/core/command/project"
+	"github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/auth/command"
+	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/dependency/command"
+	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/diagnostics/command"
+	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/manifest/command"
+	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/packages/command"
+	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/project/command"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +15,7 @@ import (
  */
 func NewTopLevelCommands() []*cobra.Command {
 	return []*cobra.Command{
-		auth.NewCommand(),
+		command.NewCommand(),
 		// project.NewCommand(),
 		// packages.NewCommand(),
 		// dependency.NewCommand(),
