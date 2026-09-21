@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-	exitCode := runtime.Execute(
+	lExitCode := runtime.Execute(
 		context.Background(),
 		os.Args[1:],
 		os.Stdout,
 		os.Stderr,
 	)
 
-	os.Exit(exitCode)
+	os.Exit(lExitCode)
 }
