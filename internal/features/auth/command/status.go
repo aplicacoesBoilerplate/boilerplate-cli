@@ -16,12 +16,12 @@ func newStatusCommand(pService contracts.IAuthServices) *cobra.Command {
 		Short: "Consulta a disponibilidade da sessão do GitHub CLI",
 		Args:  cobra.NoArgs,
 		RunE: func(pCommand *cobra.Command, pArguments []string) error {
-			response, err := pService.Status(pCommand.Context())
+			lResponse, err := pService.Status(pCommand.Context())
 			if err != nil {
 				return err
 			}
 
-			_, err = fmt.Fprintln(pCommand.OutOrStdout(), response.Authenticated)
+			_, err = fmt.Fprintln(pCommand.OutOrStdout(), lResponse.Authenticated)
 			return err
 		},
 	}

@@ -14,11 +14,11 @@ func newLoginCommand(pService contracts.IAuthServices) *cobra.Command {
 		Short: "Configura credenciais locais para GitHub Packages",
 		Args:  cobra.NoArgs,
 		RunE: func(pCommand *cobra.Command, pArguments []string) error {
-			request := contracts.TLoginRequest{
+			lRequest := contracts.TLoginRequest {
 				DryRun: false,
 			}
 
-			return pService.Login(pCommand.Context(), request)
+			return pService.Login(pCommand.Context(), lRequest)
 		},
 	}
 }

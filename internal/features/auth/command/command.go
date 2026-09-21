@@ -6,23 +6,23 @@ import (
 )
 
 /**
- * NewCommand cria o grupo de comandos de autenticação.
+ * NewCommand cria o grupo de comandos  'auth' (recursos de autenticação).
  */
 func NewCommand() *cobra.Command {
-	authService := application.NewAuthServices()
+	lAuthService := application.NewAuthServices()
 
 	// Adiciona apenas um comando 'auth'
-	authCmd := &cobra.Command{
+	lAuthCmd := &cobra.Command{
 		Use:   "auth",
 		Short: "Gerencia autenticação para GitHub Packages usando o GitHub CLI.",
 	}
 
 	// Adiciona os comandos do grupo auth.
-	authCmd.AddCommand(
-		newLoginCommand(authService),
-		newLogoutCommand(authService),
-		newStatusCommand(authService),
+	lAuthCmd.AddCommand(
+		newLoginCommand(lAuthService),
+		newLogoutCommand(lAuthService),
+		newStatusCommand(lAuthService),
 	)
 
-	return authCmd
+	return lAuthCmd
 }

@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/auth/command"
+	authCommand "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/auth/command"
 	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/dependency/command"
 	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/diagnostics/command"
 	// "github.com/aplicacoesBoilerplate/boilerplate-cli/internal/features/manifest/command"
@@ -15,7 +15,7 @@ import (
  */
 func NewTopLevelCommands() []*cobra.Command {
 	return []*cobra.Command{
-		command.NewCommand(),
+		authCommand.NewCommand(),
 		// project.NewCommand(),
 		// packages.NewCommand(),
 		// dependency.NewCommand(),

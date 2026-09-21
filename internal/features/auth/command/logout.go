@@ -14,11 +14,11 @@ func newLogoutCommand(pService contracts.IAuthServices) *cobra.Command {
 		Short: "Encerra sessão autenticada no GitHub Packages",
 		Args:  cobra.NoArgs,
 		RunE: func(pCommand *cobra.Command, pArguments []string) error {
-			request := contracts.TLogoutRequest{
+			lRequest := contracts.TLogoutRequest{
 				DryRun: false,
 			}
 
-			return pService.Logout(pCommand.Context(), request)
+			return pService.Logout(pCommand.Context(), lRequest)
 		},
 	}
 }
