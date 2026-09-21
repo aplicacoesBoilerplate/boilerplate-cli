@@ -14,6 +14,15 @@ type TLoginService struct {
 }
 
 /**
+ * NewLoginService cria o serviço responsável pela configuração de credenciais.
+ */
+func NewLoginService(pValidateTokenService *TValidateTokenService) *TLoginService {
+	return &TLoginService{
+		validateTokenService: pValidateTokenService,
+	}
+}
+
+/**
  * Login configura as credenciais necessárias para GitHub Packages.
  */
 func (pService *TLoginService) Login(

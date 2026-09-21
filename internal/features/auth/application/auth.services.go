@@ -15,18 +15,12 @@ type TAuthServices struct {
  * NewAuthServices cria a implementação padrão das operações de autenticação.
  */
 func NewAuthServices() contracts.IAuthServices {
-	validateTokenService := &TValidateTokenService{}
+	lValidateTokenService := NewValidateTokenService()
 
 	return &TAuthServices{
-		TLoginService: &TLoginService{
-			validateTokenService: validateTokenService,
-		},
-		TLogoutService: &TLogoutService{
-			validateTokenService: validateTokenService,
-		},
-		TStatusService: &TStatusService{
-			validateTokenService: validateTokenService,
-		},
+		TLoginService:  NewLoginService(lValidateTokenService),
+		TLogoutService: NewLogoutService(lValidateTokenService),
+		TStatusService: NewStatusService(lValidateTokenService),
 	}
 }
 

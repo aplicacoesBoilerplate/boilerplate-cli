@@ -14,6 +14,15 @@ type TStatusService struct {
 }
 
 /**
+ * NewStatusService cria o serviço responsável pela consulta da sessão autenticada.
+ */
+func NewStatusService(pValidateTokenService *TValidateTokenService) *TStatusService {
+	return &TStatusService{
+		validateTokenService: pValidateTokenService,
+	}
+}
+
+/**
  * Status consulta a disponibilidade da sessão do GitHub CLI.
  */
 func (pService *TStatusService) Status(
@@ -25,5 +34,3 @@ func (pService *TStatusService) Status(
 
 	return contracts.TStatusResponse{Authenticated: true}, nil
 }
-
-var _ contracts.IAuthServices = (*TAuthServices)(nil)

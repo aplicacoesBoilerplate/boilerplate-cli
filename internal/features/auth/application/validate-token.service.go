@@ -8,6 +8,13 @@ import "context"
 type TValidateTokenService struct{}
 
 /**
+ * NewValidateTokenService cria o serviço compartilhado de validação de sessão.
+ */
+func NewValidateTokenService() *TValidateTokenService {
+	return &TValidateTokenService{}
+}
+
+/**
  * ValidateToken verifica se a sessão do GitHub CLI está apta para comandos autenticados.
  */
 func (pService *TValidateTokenService) ValidateToken(pContext context.Context) error {

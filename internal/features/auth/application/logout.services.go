@@ -14,6 +14,15 @@ type TLogoutService struct {
 }
 
 /**
+ * NewLogoutService cria o serviço responsável pela remoção de credenciais.
+ */
+func NewLogoutService(pValidateTokenService *TValidateTokenService) *TLogoutService {
+	return &TLogoutService{
+		validateTokenService: pValidateTokenService,
+	}
+}
+
+/**
  * Logout remove as credenciais locais configuradas para GitHub Packages.
  */
 func (pService *TLogoutService) Logout(
