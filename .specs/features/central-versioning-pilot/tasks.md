@@ -1,6 +1,6 @@
 # Central versioning pilot Tasks
 
-**Status**: In progress
+**Status**: Complete - local verification PASS; hosted gate pending authorization
 
 ## Test Coverage Matrix
 
@@ -41,11 +41,11 @@ T1 → T2 → T3
 **Gate**: Build, existing Go suite plus vet/build/lint (caller tests start at T2)
 **Commit**: `style(go): restore formatting gate for release pipeline`
 
-**Evidence**: baseline Go tests/vet/build passed; lint failed gofmt. After normalization lint reports zero issues; versionable diff is whitespace alignment and one trailing blank line only. All other source blobs unchanged.
+**Evidence**: baseline Go tests/vet/build passed; lint failed gofmt. After normalization lint reports zero issues; versionable diff is whitespace alignment and spacing before a composite literal only. All other source blobs unchanged; working-copy line endings were normalized.
 
 ### T2: Integrate published calleds with inline Go CI
 
-**Status**: Complete - independent verification pending
+**Status**: Complete - independent local verification PASS
 **What**: Add preview/publish jobs to existing workflow; preserve inline CI and native config, with contract and real bootstrap tests.
 **Where**: `.github/workflows/ci.yml`, `go-gitsemver.yml`, `.golangci.yml`, `scripts/validate-commit-msg.sh`, `tests/versioning/test_caller.py`
 **Depends on**: T1
@@ -64,7 +64,7 @@ T1 → T2 → T3
 
 ### T3: Document pilot adoption and remaining release scope
 
-**Status**: Complete - independent verification pending
+**Status**: Complete - independent local verification PASS
 **What**: Document caller, native bootstrap and future distribution separately; preserve prior README work.
 **Where**: `README.md`, `docs/versioning-pilot.md`
 **Depends on**: T2
@@ -72,8 +72,17 @@ T1 → T2 → T3
 **Done when**:
 
 - [x] Reader can distinguish central versioning, application CI and future GoReleaser assets; no hosted/release claim without evidence.
-- [ ] Independent verifier reports scoped criteria, gates and isolated mutations (automatic closing gate follows this commit).
+- [x] Independent verifier reports scoped criteria, gates and isolated mutations: nine local ACs PASS, four mutants killed, build gates PASS; no hosted result claimed.
 
 **Tests**: none (human documentation layer)
 **Gate**: Build plus link validation
 **Commit**: `docs(versioning): explain pilot caller and delivery gates`
+
+## Local delivery result
+
+Independent report `validation.md`: 9/9 local criteria, nine contract tests,
+real pinned native adapter, Go tests/vet/build/lint and 4/4 killed mutations.
+Remote pilot push/PR and hosted execution remain a separate authorization gate.
+The existing staged hooks and untracked release distribution work remain outside
+these commits. A restored temporary sensor directory was retained after policy
+blocked cleanup; its exact path is in the report.
