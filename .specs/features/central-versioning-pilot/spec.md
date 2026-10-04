@@ -51,6 +51,6 @@ Open questions: none for local implementation. Hosted pilot execution is a subse
 
 | Requirement | Task | Status |
 | --- | --- | --- |
-| PILOT-01 | T2 | Planned |
-| PILOT-02 | T1, T2 | Planned |
-| PILOT-03 | T2, T3 | Planned |
+| PILOT-01 | T2 | Implemented - verification pending |
+| PILOT-02 | T1, T2 | Implemented - verification pending |
+| PILOT-03 | T2, T3 | In progress |

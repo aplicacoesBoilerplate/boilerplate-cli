@@ -45,20 +45,22 @@ T1 → T2 → T3
 
 ### T2: Integrate published calleds with inline Go CI
 
-**Status**: Planned
+**Status**: Complete - independent verification pending
 **What**: Add preview/publish jobs to existing workflow; preserve inline CI and native config, with contract and real bootstrap tests.
 **Where**: `.github/workflows/ci.yml`, `go-gitsemver.yml`, `.golangci.yml`, `scripts/validate-commit-msg.sh`, `tests/versioning/test_caller.py`
 **Depends on**: T1
 **Requirement**: PILOT-01, PILOT-02, PILOT-03.1
 **Done when**:
 
-- [ ] Parsed contract rejects wrong revision/events/permissions, missing CI dependency and application-coupled versioning.
-- [ ] Existing configuration gives stable 0.0.1 with exact SHA in a clean clone; no GitHub writes.
-- [ ] Existing hooks/GoReleaser/local script remain outside this commit and all build gates pass.
+- [x] Parsed contract rejects wrong revision/events/permissions, missing CI dependency and application-coupled versioning.
+- [x] Existing configuration gives stable 0.0.1 with exact SHA in a clean clone; no GitHub writes.
+- [x] Existing hooks/GoReleaser/local script remain outside this commit and all build gates pass.
 
 **Tests**: caller boundary and native real adapter
 **Gate**: Build
 **Commit**: `ci(versioning): consume centralized Go release workflows`
+
+**Evidence / adequacy**: nine caller contracts PASS after eight missing-configuration failures before implementation; native real pinned Go PASS at local HEAD, stable 0.0.1/exact SHA/explanation/unchanged tags. Go tests, vet, build and lint PASS. Contract assertions cover revision/inputs (PILOT-01.1), phase guard/read permissions (01.2), push/needs/write permissions (01.3), event lists (01.4), inline CI commands/runtime (02.1), exact allowed versioning job keys (02.2). Native literal checks cover PILOT-03.1. Existing staged hooks and untracked GoReleaser/local validator are excluded via path-specific commit (02.3). Independent mutation review follows T3.
 
 ### T3: Document pilot adoption and remaining release scope
 
