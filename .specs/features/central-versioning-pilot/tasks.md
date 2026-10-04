@@ -64,15 +64,15 @@ T1 → T2 → T3
 
 ### T3: Document pilot adoption and remaining release scope
 
-**Status**: Planned
+**Status**: Complete - independent verification pending
 **What**: Document caller, native bootstrap and future distribution separately; preserve prior README work.
 **Where**: `README.md`, `docs/versioning-pilot.md`
 **Depends on**: T2
 **Requirement**: PILOT-03.2
 **Done when**:
 
-- [ ] Reader can distinguish central versioning, application CI and future GoReleaser assets; no hosted/release claim without evidence.
-- [ ] Independent verifier reports scoped criteria, gates and isolated mutations.
+- [x] Reader can distinguish central versioning, application CI and future GoReleaser assets; no hosted/release claim without evidence.
+- [ ] Independent verifier reports scoped criteria, gates and isolated mutations (automatic closing gate follows this commit).
 
 **Tests**: none (human documentation layer)
 **Gate**: Build plus link validation
