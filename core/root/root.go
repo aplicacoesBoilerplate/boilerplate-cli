@@ -10,9 +10,9 @@ import (
  */
 func NewCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "boilerplate",
-		Short: "CLI para aplicações Java e Vue",
-		SilenceUsage: true,
+		Use:           "boilerplate",
+		Short:         "CLI para aplicações Java e Vue",
+		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
 

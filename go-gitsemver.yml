@@ -1,0 +1,28 @@
+mode: ContinuousDelivery
+tag-prefix: '[vV]'
+base-version: 0.0.0
+next-version: 0.0.1
+commit-message-convention: ConventionalCommits
+# Bootstrap da primeira release: next-version e Disabled são temporários.
+# Remover ambos após o primeiro tag para ativar bumps convencionais.
+commit-message-incrementing: Disabled
+
+branches:
+  main:
+    regex: ^(master|main)$
+    increment: Patch
+    tag: ''
+    is-mainline: true
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    increment: Minor
+    tag: alpha
+  release:
+    regex: ^releases?[/-]
+    increment: None
+    tag: beta
+    is-release-branch: true
+  feature:
+    regex: ^features?[/-]
+    increment: Inherit
+    tag: '{BranchName}'

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+hook_dir=$(dirname "${BASH_SOURCE[0]}")
+bash "$hook_dir/../scripts/validate-commit-msg.sh" "$1"
