@@ -1,0 +1,27 @@
+name: Release Please
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.event.pull_request.merged == true
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    if: github.event.pull_request.merged == true
+    needs: validate
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    uses: aplicacoesBoilerplate/.github/.github/workflows/version-release-please-called.yml@1d874d946e5f5ad233a6b1f6bf278fef78f3b46d
+    with:
+      project-type: go
+      central-ref: 1d874d946e5f5ad233a6b1f6bf278fef78f3b46d
+      publish-artifacts: false

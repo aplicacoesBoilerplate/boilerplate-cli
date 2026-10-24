@@ -1,12 +1,11 @@
 ﻿name: CI
 on:
+  workflow_call:
   push:
     branches: [master, develop, 'release/**']
   pull_request:
     branches: [master, develop, 'release/**', 'feature/issue-8']
     types: [opened, reopened, synchronize, edited, labeled, unlabeled, milestoned, demilestoned]
-  pull_request_review:
-    types: [submitted, dismissed]
 permissions:
   contents: read
 jobs:
@@ -45,30 +44,4 @@ jobs:
           while IFS= read -r commit; do
             git show -s --format=%B "$commit" | bash scripts/validate-commit-msg.sh -
           done < <(git rev-list --no-merges "$base..HEAD")
-
-  validate-pr:
-    if: ${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_review') && (github.event.pull_request.base.ref == 'develop' || github.event.pull_request.base.ref == 'master') }}
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      checks: read
-    uses: aplicacoesBoilerplate/.github/.github/workflows/version-preview.yml@f3e7a0168da9e3882840302add3ac8d162bac81e
-    with:
-      adapter: go-gitsemver
-      project_path: .
-      target_branch: master
-
-  publish:
-    if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
-    needs: go-ci
-    permissions:
-      contents: write
-      pull-requests: read
-      issues: read
-    uses: aplicacoesBoilerplate/.github/.github/workflows/version-publish.yml@f3e7a0168da9e3882840302add3ac8d162bac81e
-    with:
-      adapter: go-gitsemver
-      project_path: .
-      target_branch: master
 

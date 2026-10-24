@@ -1,23 +1,13 @@
-"""Pilot boundary contracts; --real-go evaluates native bootstrap without GitHub writes."""
+"""Boundary contracts for centralized Release Please; no GitHub writes."""
 
-import json
 from pathlib import Path
-import shutil
-import subprocess
-import sys
-import tempfile
 import unittest
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-REVISION = "f3e7a0168da9e3882840302add3ac8d162bac81e"
-REAL_GO = "--real-go" in sys.argv
-if REAL_GO:
-    sys.argv.remove("--real-go")
-
-PR_GUARD = "${{ (github.event_name == 'pull_request' || github.event_name == 'pull_request_review') && (github.event.pull_request.base.ref == 'develop' || github.event.pull_request.base.ref == 'master') }}"
-PUBLISH_GUARD = "${{ github.event_name == 'push' && github.ref_name == 'master' }}"
+REVISION = "1d874d946e5f5ad233a6b1f6bf278fef78f3b46d"
+MERGED_GUARD = "github.event.pull_request.merged == true"
 
 
 class CallerContract(unittest.TestCase):
@@ -27,45 +17,55 @@ class CallerContract(unittest.TestCase):
             (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8-sig"),
             Loader=yaml.BaseLoader,
         )
+        cls.caller = yaml.load(
+            (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8-sig"),
+            Loader=yaml.BaseLoader,
+        )
 
-    def test_published_workflows_selected_at_same_reviewed_revision(self):
-        for job, workflow in [("validate-pr", "version-preview.yml"), ("publish", "version-publish.yml")]:
-            self.assertEqual(
-                self.workflow["jobs"][job]["uses"],
-                f"aplicacoesBoilerplate/.github/.github/workflows/{workflow}@{REVISION}",
-            )
+    def test_published_workflow_and_scripts_use_same_reviewed_revision(self):
+        job = self.caller["jobs"]["release"]
+        self.assertEqual(job["uses"], f"aplicacoesBoilerplate/.github/.github/workflows/version-release-please-called.yml@{REVISION}")
+        self.assertEqual(job["with"]["central-ref"], REVISION)
 
-    def test_versioning_inputs_only_describe_adapter_project_and_target(self):
-        for job in ["validate-pr", "publish"]:
-            self.assertEqual(self.workflow["jobs"][job]["with"], {
-                "adapter": "go-gitsemver", "project_path": ".", "target_branch": "master",
-            })
-
-    def test_preview_does_not_fail_feature_to_release_ci(self):
-        self.assertEqual(self.workflow["jobs"]["validate-pr"]["if"], PR_GUARD)
-
-    def test_preview_permissions_are_read_only_and_include_checks(self):
-        self.assertEqual(self.workflow["jobs"]["validate-pr"]["permissions"], {
-            "contents": "read", "pull-requests": "read", "issues": "read", "checks": "read",
+    def test_versioning_selects_go_without_binary_distribution(self):
+        self.assertEqual(self.caller["jobs"]["release"]["with"], {
+            "project-type": "go", "central-ref": REVISION, "publish-artifacts": "false",
         })
 
-    def test_publication_only_after_master_push_and_successful_application_ci(self):
-        job = self.workflow["jobs"]["publish"]
-        self.assertEqual(job["if"], PUBLISH_GUARD)
-        self.assertEqual(job["needs"], "go-ci")
+    def test_only_closed_master_prs_can_start_release(self):
+        self.assertEqual(self.caller["on"], {
+            "pull_request": {"types": ["closed"], "branches": ["master"]},
+        })
+        for job in self.caller["jobs"].values():
+            self.assertEqual(job["if"], MERGED_GUARD)
+
+    def test_validation_is_read_only_and_uses_application_ci(self):
+        self.assertEqual(self.caller["permissions"], {"contents": "read"})
+        self.assertEqual(self.caller["jobs"]["validate"], {
+            "if": MERGED_GUARD, "uses": "./.github/workflows/ci.yml",
+        })
+        self.assertIn("workflow_call", self.workflow["on"])
+
+    def test_release_requires_ci_and_minimum_writer_permissions(self):
+        job = self.caller["jobs"]["release"]
+        self.assertEqual(job["needs"], "validate")
         self.assertEqual(job["permissions"], {
-            "contents": "write", "pull-requests": "read", "issues": "read",
+            "contents": "write", "pull-requests": "write", "issues": "write",
         })
+        self.assertEqual(self.workflow["permissions"], {"contents": "read"})
 
-    def test_all_policy_invalidation_events_subscribed(self):
+    def test_legacy_preview_and_publisher_are_retired(self):
+        self.assertEqual(set(self.workflow["jobs"]), {"go-ci"})
+        workflows = "\n".join(p.read_text(encoding="utf-8-sig") for p in (ROOT / ".github/workflows").glob("*.yml"))
+        for legacy in ["version-preview.yml@", "version-publish.yml@", "adapter: go-gitsemver", "goreleaser/goreleaser-action@", "packages: write"]:
+            self.assertNotIn(legacy, workflows)
+
+    def test_ci_keeps_release_develop_master_and_pilot_branches(self):
+        self.assertEqual(self.workflow["on"]["push"]["branches"], ["master", "develop", "release/**"])
+        self.assertEqual(self.workflow["on"]["pull_request"]["branches"], ["master", "develop", "release/**", "feature/issue-8"])
         self.assertEqual(self.workflow["on"]["pull_request"]["types"], [
             "opened", "reopened", "synchronize", "edited", "labeled", "unlabeled", "milestoned", "demilestoned",
         ])
-        self.assertEqual(self.workflow["on"]["pull_request_review"]["types"], ["submitted", "dismissed"])
-
-    def test_ci_keeps_release_develop_master_and_review_events(self):
-        self.assertEqual(self.workflow["on"]["push"]["branches"], ["master", "develop", "release/**"])
-        self.assertEqual(self.workflow["on"]["pull_request"]["branches"], ["master", "develop", "release/**", "feature/issue-8"])
 
     def test_ci_inline_and_gated_on_go_mod_not_hardcoded_go_version(self):
         job = self.workflow["jobs"]["go-ci"]
@@ -80,45 +80,14 @@ class CallerContract(unittest.TestCase):
             self.assertIn(command, runs)
         self.assertTrue(any(step.get("uses", "").startswith("golangci/golangci-lint-action@") for step in steps))
         self.assertTrue(any("scripts/validate-commit-msg.sh" in run for run in runs))
-        self.assertEqual(self.workflow["permissions"], {"contents": "read"})
 
-    def test_versioning_has_no_application_steps_local_secret_or_distribution_dependency(self):
-        for job_name in ["validate-pr", "publish"]:
-            job = self.workflow["jobs"][job_name]
-            self.assertEqual(set(job), {"if", "permissions", "uses", "with"} | ({"needs"} if job_name == "publish" else set()))
-        self.assertEqual(set(self.workflow["jobs"]), {"go-ci", "validate-pr", "publish"})
+    def test_caller_has_no_application_steps_secrets_or_distribution_dependency(self):
+        self.assertEqual(set(self.caller["jobs"]), {"validate", "release"})
+        self.assertEqual(set(self.caller["jobs"]["release"]), {"if", "needs", "permissions", "uses", "with"})
+        self.assertNotIn("secrets", self.caller["jobs"]["validate"])
         self.assertFalse((ROOT / ".github/workflows/go-ci.yml").exists())
-
-
-def run_native_bootstrap():
-    """Real pilot history in a clone avoids native-library linked-worktree quirks."""
-    binary = shutil.which("go-gitsemver")
-    if not binary:
-        raise RuntimeError("Install the pinned go-gitsemver before --real-go")
-    output = subprocess.check_output(["go", "version", "-m", binary], text=True)
-    if "680c1c12d9a4" not in output:
-        raise AssertionError("Native binary must match pinned revision 680c1c12d9a4")
-    sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-    with tempfile.TemporaryDirectory(prefix="boilerplate-versioning-") as directory:
-        repo = Path(directory) / "pilot"
-        subprocess.run(["git", "clone", "--quiet", "--no-hardlinks", str(ROOT), str(repo)], check=True)
-        subprocess.run(["git", "checkout", "--quiet", "--detach", sha], cwd=repo, check=True)
-        subprocess.run(["git", "branch", "-f", "master", sha], cwd=repo, check=True)
-        shutil.copyfile(ROOT / "go-gitsemver.yml", repo / "go-gitsemver.yml")
-        before = subprocess.check_output(["git", "tag"], cwd=repo, text=True)
-        result = subprocess.run([binary, "--branch", "master", "--commit", sha, "-o", "json", "--explain"], cwd=repo, text=True, capture_output=True, check=True)
-        native = json.loads(result.stdout)
-        if native["SemVer"] != "0.0.1" or native["Sha"] != sha:
-            raise AssertionError(f"Expected stable 0.0.1 at {sha}, received {native}")
-        if not result.stderr.strip():
-            raise AssertionError("Native explanation must be available")
-        if subprocess.check_output(["git", "tag"], cwd=repo, text=True) != before:
-            raise AssertionError("Native calculation must not create tags")
-        print(f"Real pinned adapter: 0.0.1 at {sha}; explanation present, tags unchanged")
+        self.assertTrue((ROOT / ".goreleaser.yml").is_file())
 
 
 if __name__ == "__main__":
-    if REAL_GO:
-        run_native_bootstrap()
-    else:
-        unittest.main()
+    unittest.main()
