@@ -23,6 +23,8 @@ Gates locais aprovados: nove contratos Python, go test ./..., go vet ./..., go b
 
 O lint local identificou apenas CRLF introduzido pelo checkout Windows. Foi comprovada igualdade dos fontes normalizados com os blobs HEAD e normalizado esse checkout; git diff --exit-code -- '*.go' terminou sem alteração. Nenhum fonte Go será incluído no commit. T6 tem implementação/gates concluídos e é persistida antes da verificação final.
 
+A revisão independente encontrou um desvio no checkout legado: no evento closed/merged a CI ainda selecionava head.sha do PR. Corrigido para usar merge_commit_sha após merge e preservar head.sha em PR aberto. O contrato existente foi fortalecido, falhou antes da correção e passou depois; continuam nove casos. Assim CI e writer validam/executam o mesmo commit integrado.
+
 Integração em codex/release-please-stage1 baseada em release/v0.0.1. Nenhuma feature foi promovida a master nem alterada. O ciclo real do consumidor continua pendente da revisão e dos merges humanos: levar a integração pelo Git Flow, realizar entrega fix:/feat: com milestone e inspecionar o PR técnico antes de integrar. Conferir tag/Release no SHA desse segundo merge, sem assets publicados.
 
 [Contrato central](https://github.com/aplicacoesBoilerplate/.github/blob/1d874d946e5f5ad233a6b1f6bf278fef78f3b46d/docs/pipelines/versionamento-release-please.md).

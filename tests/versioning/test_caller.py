@@ -72,6 +72,8 @@ class CallerContract(unittest.TestCase):
         self.assertNotIn("uses", job)
         self.assertEqual(job["if"], "${{ github.event_name != 'pull_request_review' }}")
         steps = job["steps"]
+        checkout = next(step for step in steps if step.get("uses", "").startswith("actions/checkout@"))
+        self.assertEqual(checkout["with"]["ref"], "${{ github.event.pull_request.merged == true && github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha || github.sha }}")
         setup = next(step for step in steps if step.get("uses", "").startswith("actions/setup-go@"))
         self.assertEqual(setup["with"]["go-version-file"], "go.mod")
         self.assertNotIn("go-version", setup["with"])
