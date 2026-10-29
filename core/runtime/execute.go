@@ -17,13 +17,13 @@ func Execute(
 	pStdout io.Writer,
 	pStderr io.Writer,
 ) int {
-	rootCmd := root.NewCommand()
+	lRootCmd := root.NewCommand()
 
-	rootCmd.SetArgs(pArguments)
-	rootCmd.SetOut(pStdout)
-	rootCmd.SetErr(pStderr)
+	lRootCmd.SetArgs(pArguments)
+	lRootCmd.SetOut(pStdout)
+	lRootCmd.SetErr(pStderr)
 
-	if err := rootCmd.ExecuteContext(pContext); err != nil {
+	if err := lRootCmd.ExecuteContext(pContext); err != nil {
 		_, _ = fmt.Fprintln(pStderr, "erro:", err.Error())
 		return 1
 	}

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+mapfile -d '' changed_go_files < <(git diff --cached --name-only --diff-filter=ACM -z -- '*.go')
+if ((${#changed_go_files[@]} == 0)); then
+  exit 0
+fi
+
+for file in "${changed_go_files[@]}"; do
+  if [[ -n "$(git show ":$file" | gofmt -d)" ]]; then
+    echo "Arquivo Go sem gofmt: $file" >&2
+    exit 1
+  fi
+done
+
+if ! command -v golangci-lint >/dev/null 2>&1; then
+  echo 'Instale golangci-lint v2 para executar o hook pre-commit.' >&2
+  exit 1
+fi
+
+golangci-lint run --new-from-rev=HEAD ./...

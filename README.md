@@ -29,6 +29,21 @@ boilerplate audit
 
 O fluxo de autenticação reutilizará a sessão do GitHub CLI. Não haverá OAuth Device Flow próprio nem armazenamento de uma cópia do token pelo `boilerplate-cli`.
 
+## Arquitetura
+
+A CLI é organizada em Vertical Slices por recurso. Cada slice concentra seus contratos, camada de aplicação, adapters de comando e, quando necessários, domínio e infraestrutura.
+
+```text
+internal/features/<recurso>/
+  application/    # Orquestra os casos de uso.
+  command/        # Adapter Cobra: flags, argumentos e saída.
+  contracts/      # Contratos exclusivos do recurso.
+  domain/         # Regras de domínio, quando existirem.
+  infrastructure/ # Integrações externas, quando existirem.
+```
+
+`core` contém somente o runtime, o comando raiz e o registro da árvore Cobra. Contratos realmente compartilhados entre recursos ficam em `internal/shared`.
+
 ## Desenvolvimento
 
 Requisitos:
@@ -54,3 +69,24 @@ A CLI usa [Cobra](https://github.com/spf13/cobra). Viper não é dependência do
 - [`PackagesVue#1`](https://github.com/aplicacoesBoilerplate/PackagesVue/issues/1): estrutura base dos packages npm.
 
 A distribuição multiplataforma do CLI e a publicação de `v0.0.1` serão habilitadas somente depois da implementação e verificação das issues do milestone.
+
+## Preparação local de versão e release
+
+Antes de contribuir, instale `golangci-lint` v2.13.2 e ative os hooks versionados neste checkout com `git config --local core.hooksPath .githooks`. O hook `pre-commit` confere `gofmt` e lint Go nas alterações, e `commit-msg` valida assuntos como `feat(cli): exibir versão`, `fix: ...` ou `release: ...`; commits incompatíveis também são rejeitados na CI. Os hooks locais não substituem os checks remotos de lint, `go test ./...`, `go vet ./...` e `go build ./...`.
+
+O Release Please centralizado mantém a versão, o changelog, a tag e a GitHub Release. A milestone do PR funcional informa a versão desejada; o PR técnico posterior não precisa de outra milestone. go-gitsemver.yml e o auxiliar validate-release-version.sh são históricos e não são executados neste fluxo. Não há cálculo local próprio nem label de override nesta integração.
+
+Antes de publicar, confira a distribuição localmente sem criar release:
+
+```bash
+goreleaser check
+goreleaser release --snapshot --clean
+```
+
+O snapshot gera arquivos para Windows, Linux e macOS em `dist/`, inclusive `checksums.txt`. Um repositório derivado deve consumir o workflow reutilizável com sua própria identidade, histórico e permissões, sem acesso de escrita à organização que mantém este template. Snapshots não publicam uma GitHub Release.
+
+## Caller de versionamento centralizado
+
+O caller `.github/workflows/release.yml` aguarda a CI Go reutilizável e chama o Release Please central por SHA remoto, igual ao central-ref dos scripts. Apenas um PR integrado em master inicia o ciclo. A CI mantém testes, lint, vet, build, help e validação de commits/contrato.
+
+Veja [o guia do piloto](docs/versioning-pilot.md) para os dois momentos, testes e limites da etapa 1. publish-artifacts=false mantém binários/GoReleaser desligados; versão embutida e distribuição da aplicação permanecem fora desta integração.
