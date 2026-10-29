@@ -1,161 +1,30 @@
-# Piloto do versionamento central - issue #8
+# Versionamento centralizado: etapa 1
 
-## Realização
+O caller de produção está em .github/workflows/release.yml. Ele chama o workflow central e seus scripts na mesma revisão imutável 1d874d946e5f5ad233a6b1f6bf278fef78f3b46d. A aplicação mantém sua CI em ci.yml, reutilizável via workflow_call. Não copiamos scripts nem implementamos cálculo de versão neste CLI.
 
-A [issue #8](https://github.com/aplicacoesBoilerplate/boilerplate-cli/issues/8)
-trata de pipeline, versão e publicação de binários multiplataforma. Este
-incremento conecta o versionamento ao MVP central sem assumir que a entrega
-de assets GoReleaser também esteja concluída. A issue #14 continua responsável
-pela versão incorporada ao executável.
+## Dois momentos
 
-O [workflow único do piloto](../.github/workflows/ci.yml) contém:
+1. PR funcional (develop ou hotfix para master), com milestone SemVer, revisão e merge humano: a CI do commit integrado roda primeiro; depois o called seleciona a estratégia Go do Release Please e prepara o PR técnico com a versão da milestone e o changelog.
+2. PR técnico release-please para master: após revisão/CI/merge humano, a pipeline cria tag e GitHub Release automaticamente. Não exige outra milestone nem repete o override.
 
-| Job | Responsabilidade |
-| --- | --- |
-| go-ci | Testes, vet, build, lint, help e validação de commits/contrato da aplicação. |
-| validate-pr | Chamar prévia central em PR/review com destino develop/master. |
-| publish | Após CI e push em master, chamar publicação central protegida. |
+Só PR closed com merged=true e destino master é elegível. Fechar sem merge, PRs para develop/release e pushes isolados não publicam. O job validate tem leitura; release depende dele e recebe contents/pull-requests/issues write. Não há secrets de registry herdados. Os dois momentos continuam sujeitos às políticas de Actions do consumidor.
 
-Os calleds estão em `aplicacoesBoilerplate/.github`, revisão imutável
-`f3e7a0168da9e3882840302add3ac8d162bac81e`, integrada pelo
-[PR central #10](https://github.com/aplicacoesBoilerplate/.github/pull/10).
-Não usamos arquivos do checkout local do central, `@master` mutável, comandos
-locais para escolher versão ou um token pessoal no caller.
+## Migração e distribuição
 
-Os únicos inputs de versionamento atuais são:
+A prévia e o publisher antigos go-gitsemver foram retirados da CI ativa. go-gitsemver.yml e scripts/validate-release-version.sh permanecem históricos, sem execução pela pipeline. As regras antigas de milestone opcional, label de override e environment da implementação Shell não fazem parte deste novo fluxo Release Please.
 
-```yaml
-with:
-  adapter: go-gitsemver
-  project_path: .
-  target_branch: master
-```
+publish-artifacts=false impede GoReleaser na etapa 1. A configuração .goreleaser.yml, hooks e código funcional permanecem preservados para trabalho posterior. Versão embutida em Cobra, assets/binários, checksums e publicação em registry pertencem às issues da aplicação e à etapa 2; não foram implementados aqui.
 
-Para outra aplicação Go, adaptar caminho e branch, manter o mesmo SHA nos dois
-calleds e ligar publicação à sua própria CI. Os comandos específicos de
-`boilerplate` pertencem somente ao job de CI deste piloto. O versionamento não
-requer Cobra, variáveis de build, GoReleaser, hooks ou nome de executável.
-Git, Bash, Node, GitHub CLI e o adaptador são infraestrutura do called, não
-dependências funcionais do módulo Go. Consulte os
-[scripts centrais](https://github.com/aplicacoesBoilerplate/.github/blob/f3e7a0168da9e3882840302add3ac8d162bac81e/scripts/versioning/README.md).
+## Verificação T6
 
-### PRs e integração
+A suíte Python existente mantém nove testes de contrato, agora alinhados ao fluxo aprovado: SHA igual, tipo Go/flag false, eventos/merge, CI reutilizável somente leitura, dependência de CI/permissões, aposentadoria dos escritores antigos, branches, comandos Go e separação de responsabilidades. Não replica o cálculo do Release Please; esse motor é validado na suíte central TS.
 
-PRs de feature para `release/*` executam CI sem chamar uma prévia cujo fluxo
-final não se aplica. Na promoção para develop, o central produz o guia
-Markdown/JSON derivado do relatório nativo, sem commitar changelog.
-`develop -> master` e `hotfix/<nome> -> master` compartilham todas as regras.
-O hotfix parte da master publicada; não existe PATCH forçado no caller.
+Gates locais aprovados: nove contratos Python, go test ./..., go vet ./..., go build ./..., golangci-lint run ./... (zero issues), build e --help. O antigo modo opcional --real-go executava go-gitsemver e foi aposentado com a integração correspondente, sem reduzir os nove casos de contrato. Os testes Go de aplicação permanecem intactos.
 
-Milestone ausente aceita o cálculo nativo. Milestone presente deve ter título
-estrito `vMAJOR.MINOR.PATCH` e coincidir com versão/incremento. Título inválido
-bloqueia sem override. Divergência válida exige label `versioning:override`
-por Maintain/Admin e aprovação posterior de outro Maintain/Admin no head atual.
-Commit, milestone, label e review mudados reexecutam a avaliação.
+O lint local identificou apenas CRLF introduzido pelo checkout Windows. Foi comprovada igualdade dos fontes normalizados com os blobs HEAD e normalizado esse checkout; git diff --exit-code -- '*.go' terminou sem alteração. Nenhum fonte Go será incluído no commit. T6 tem implementação/gates concluídos e é persistida antes da verificação final.
 
-A publicação usa `needs: go-ci`, evento push em master e token com contents
-write; prévia é somente leitura, incluindo checks. O central revalida branch
-padrão, SHA remoto e associação ao único PR integrado. Review se refere ao head
-do PR; tag e Release se referem ao SHA integrado. Reexecução idêntica não escreve
-novamente; conflito não move tag nem sobrescreve Release.
+A revisão independente encontrou um desvio no checkout legado: no evento closed/merged a CI ainda selecionava head.sha do PR. Corrigido para usar merge_commit_sha após merge e preservar head.sha em PR aberto. O contrato existente foi fortalecido, falhou antes da correção e passou depois; continuam nove casos. Assim CI e writer validam/executam o mesmo commit integrado.
 
-Environment adicional é opcional. Para exigi-lo, adicionar ao `with` de publish:
+Integração em codex/release-please-stage1 baseada em release/v0.0.1. Nenhuma feature foi promovida a master nem alterada. O ciclo real do consumidor continua pendente da revisão e dos merges humanos: levar a integração pelo Git Flow, realizar entrega fix:/feat: com milestone e inspecionar o PR técnico antes de integrar. Conferir tag/Release no SHA desse segundo merge, sem assets publicados.
 
-```yaml
-publication_environment: production
-```
-
-As regras do environment e os rulesets/required checks devem ser configurados
-no consumidor. O caller não cria essas proteções. Environment não substitui CI
-ou autorização de divergência. Não há aprovação por LLM nesta integração.
-
-### Bootstrap do adaptador
-
-O arquivo existente [go-gitsemver.yml](../go-gitsemver.yml) é autodetectado pela
-revisão fixada do adaptador. Não adicionar outro `GitVersion.yml` sem revisar
-a precedência de busca, pois isso pode ocultar esta configuração.
-
-`next-version: 0.0.1` e `commit-message-incrementing: Disabled` são exceções
-temporárias aprovadas para bootstrap. O central usa `0.0.0` como base
-matemática na ausência de tags e só aceita primeira versão estável `0.0.1`.
-Após a primeira tag, retirar **ambas** as opções em uma alteração rastreável e
-verificar increments convencionais antes da próxima publicação. Não manter
-`next-version` permanente nem usar override para esconder configuração errada.
-
-### Distribuição da CLI
-
-O central cria tag/Release e suas notas; não gera assets GoReleaser ou injeta
-versão em Cobra. A configuração GoReleaser existente permanece separada e
-fora dos jobs de versionamento. Sua integração futura deve consumir a versão
-publicada, sem recalcular versão ou competir pela criação da mesma Release.
-
-Não depender apenas de push de tag feito com `GITHUB_TOKEN` para disparar um
-segundo workflow de assets: esse encadeamento precisa ser projetado e validado
-separadamente. Nenhuma distribuição real é autorizada só pelo teste do caller.
-
-## Fontes modificados
-
-- `.github/workflows/ci.yml`: CI inline e chamadas remotas versionadas.
-- `tests/versioning/test_caller.py`: contrato YAML e cálculo real sem publicação.
-- `go-gitsemver.yml`, `.golangci.yml`, `scripts/validate-commit-msg.sh`:
-  preparação existente necessária à CI, incorporada sem mudar seu contrato.
-- `core/root/root.go`, `internal/features/auth/command/login.go`: gofmt apenas.
-- `README.md` e este guia: adoção e limites.
-- `.specs/features/central-versioning-pilot/`: escopo e tarefas TLC locais.
-
-Hooks previamente staged, `.goreleaser.yml` e o auxiliar local de validação de
-release foram preservados, sem incorporar essa entrega ao commit do caller.
-Não alteramos o worktree da issue #14 nem descartamos o planejamento OpenSpec.
-
-## p/ teste
-
-Pré-requisito do teste de contrato: Python 3.12 com PyYAML 6.0.1. Os testes
-Go seguem a versão de `go.mod`. O workflow instala Python e a dependência para
-o contrato; o adaptador é instalado pelo central na execução do called.
-
-```bash
-python -m pip install PyYAML==6.0.1
-python tests/versioning/test_caller.py
-go test ./...
-go vet ./...
-go build ./...
-golangci-lint run ./...
-```
-
-Para o cálculo nativo real, sem token nem publicação:
-
-```bash
-go install github.com/MyCarrier-DevOps/go-gitsemver@680c1c12d9a4f573a8da1b2e3ccebb3571b1cab6
-python tests/versioning/test_caller.py --real-go
-```
-
-O binário deve estar no PATH. O teste usa histórico real do piloto em clone
-temporário, configuração nativa existente, SHA exato, versão `0.0.1`,
-explicação e tags inalteradas; descarta o clone ao terminar. Criar nele uma ref
-master no SHA avaliado é preparação isolada, não promoção da branch real.
-O clone evita a falha de resolução de branch observada na biblioteca nativa
-ao executar diretamente neste linked worktree Windows.
-
-Em Windows, git/autocrlf pode introduzir diferenças de terminadores que o
-gofmt/lint detecta. Normalizar com gofmt antes do lint; isso não muda regras
-funcionais. Os dois diffs versionáveis desta integração são apenas formatação.
-
-### Gate hospedado seguinte
-
-Após autorização de push/PR, a entrega volta para `release/v0.0.1`, preservando
-o fluxo da issue. Esse PR testa a CI do piloto, mas não deve publicar nem
-chamar a prévia final. Uma promoção controlada para develop permite conferir
-o guia e o contrato remoto. Publicação de aplicação exige promoção separada,
-aprovada e integrada em master; não fazer merge para produção só para obter
-uma evidência de teste.
-
-Contrato estático e cálculo nativo local não provam que o GitHub aceitou o
-called, suas permissões ou os artifacts hospedados. O relatório de validação
-deve distinguir esses resultados; nenhum resultado remoto está presumido.
-
-## O que há de novo
-
-O piloto utiliza a revisão já publicada da mesma política central, sem copiar
-scripts nem manter algoritmo próprio de release. A CI da aplicação continua
-substituível, e distribuição de binários pode evoluir sem acoplar o cálculo de
-versão a este CLI.
+[Contrato central](https://github.com/aplicacoesBoilerplate/.github/blob/1d874d946e5f5ad233a6b1f6bf278fef78f3b46d/docs/pipelines/versionamento-release-please.md).

@@ -74,16 +74,7 @@ A distribuição multiplataforma do CLI e a publicação de `v0.0.1` serão habi
 
 Antes de contribuir, instale `golangci-lint` v2.13.2 e ative os hooks versionados neste checkout com `git config --local core.hooksPath .githooks`. O hook `pre-commit` confere `gofmt` e lint Go nas alterações, e `commit-msg` valida assuntos como `feat(cli): exibir versão`, `fix: ...` ou `release: ...`; commits incompatíveis também são rejeitados na CI. Os hooks locais não substituem os checks remotos de lint, `go test ./...`, `go vet ./...` e `go build ./...`.
 
-O `go-gitsemver` calcula SemVer sobre o histórico e as tags Git (`fetch-depth: 0` em CI). Para reproduzir localmente o cálculo use a mesma revisão fixa do adapter compartilhado:
-
-```bash
-go install github.com/MyCarrier-DevOps/go-gitsemver@680c1c12d9a4f573a8da1b2e3ccebb3571b1cab6
-go-gitsemver --show-variable SemVer
-```
-
-No primeiro release, `go-gitsemver.yml` usa `base-version: 0.0.0`, `next-version: 0.0.1` e `commit-message-incrementing: Disabled`. Esta exceção de bootstrap mantém `v0.0.1` apesar dos commits históricos `feat`; após a primeira tag, remover **ambas** as opções temporárias (`next-version` e `Disabled`) para voltar a incrementar por Conventional Commits. Se a versão calculada não corresponder à versão aprovada para publicação, interromper a release em vez de mover uma tag existente.
-
-`bash scripts/validate-release-version.sh v0.0.1 0.0.1` é um auxiliar local anterior que verifica igualdade com a tag aprovada e rejeita tags locais duplicadas. Ele não é chamado pelo versionamento central: a policy compartilhada valida milestone/override e reconcilia tag e Release remotas, aceitando reexecução idêntica sem sobrescrita.
+O Release Please centralizado mantém a versão, o changelog, a tag e a GitHub Release. A milestone do PR funcional informa a versão desejada; o PR técnico posterior não precisa de outra milestone. go-gitsemver.yml e o auxiliar validate-release-version.sh são históricos e não são executados neste fluxo. Não há cálculo local próprio nem label de override nesta integração.
 
 Antes de publicar, confira a distribuição localmente sem criar release:
 
@@ -96,15 +87,6 @@ O snapshot gera arquivos para Windows, Linux e macOS em `dist/`, inclusive `chec
 
 ## Caller de versionamento centralizado
 
-O workflow `.github/workflows/ci.yml` reúne `go-ci`, `validate-pr` e `publish`.
-Os dois últimos consomem o central publicado em
-`f3e7a0168da9e3882840302add3ac8d162bac81e`, revisão integrada à master do
-repositório `aplicacoesBoilerplate/.github`. Enviam somente `go-gitsemver`,
-caminho do projeto e branch alvo; não dependem de Cobra, GoReleaser ou hooks.
-A publicação aguarda a CI da aplicação e só é elegível após push em master
-associado a um PR integrado permitido pelo central.
+O caller `.github/workflows/release.yml` aguarda a CI Go reutilizável e chama o Release Please central por SHA remoto, igual ao central-ref dos scripts. Apenas um PR integrado em master inicia o ciclo. A CI mantém testes, lint, vet, build, help e validação de commits/contrato.
 
-Veja [o guia do piloto](docs/versioning-pilot.md) para fluxo, testes seguros,
-environment opcional, bootstrap e limites de publicação. Esta integração local
-não conclui a distribuição de binários prevista na issue #8 nem publica a
-primeira versão da aplicação.
+Veja [o guia do piloto](docs/versioning-pilot.md) para os dois momentos, testes e limites da etapa 1. publish-artifacts=false mantém binários/GoReleaser desligados; versão embutida e distribuição da aplicação permanecem fora desta integração.
