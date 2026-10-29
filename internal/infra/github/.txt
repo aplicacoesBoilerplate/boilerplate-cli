@@ -1,0 +1,4 @@
+Executar gh auth token para recuperar o token da autenticação atual no GitHub CLI.
+O token deve ser mantido em memória até que seja realizado um logout.
+Se o terminal for encerrado com o token ainda em memória, zere antes de matar o processo.
+Devemos ser capazes de acessar o token pelo endereço de memória da variável que o mantém.
